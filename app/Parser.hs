@@ -1,26 +1,52 @@
 module Parser where
 
-type ParserPosition = Int
+import Text.Parser
+import Control.Applicative
+import Control.Monad
 
-newtype Parser token result = Parser { 
-    runParser :: [token] -> Maybe (result, [token])
-}
+data PExpression
+    = PTrue
+    | PFalse
+    | PInteger Int
+    | PFloat Double
+    | PChar Char
+    | PLiteralString String
 
-instance Functor (Parser token) where
-    fmap :: (a -> b) -> Parser token a -> Parser token b
-    fmap mapper parser = Parser $ \tokens ->
-        case runParser parser tokens of
-            Just (result, rest) -> Just (mapper result, rest)
-            Nothing -> Nothing
+parseTrue = PTrue <$ str "TRUE"
 
-instance Applicative (Parser token) where
+parseFalse = PFalse <$ str "FALSE"
+
+parseBoolean = parseTrue <|> parseFalse
+
+parseDigit = charThat (\c -> '0' <= c && c <= '9')
+
+parseUnsignedInteger = PInteger . read <$> some parseDigit
+
+-- parseUnsignedFloat = PFloat $ do
+--     integerPart <- some parseDigit
+--     void $ char '.'
+--     decimalPart <- some parseDigit
+--     return (read (integerPart ++ "." ++ decimalPart) :: Double)
+
+-- parseUnsignedFloat =
+--     parseUnsignedInteger >>= (\integerPart ->
+--     void (char '.') >> (
+--     parseUnsignedInteger >>= \decimalPart ->
+--     return (read (integerPart ++ "." ++ decimalPart) :: Double)))
 
 
-instance Monad (Parser token) where
+-- "abc"
+-- parseLiteralString = do 
+--     _ <- char '\"'
+--     s <- many $ charThat (\c -> c /= '\"' && c /= '\'')
+--     _ <- char '\"'
+--     return $ PLiteralString s
 
+-- parseChar = do
+--     _ <- char '\''
+--     c <- charThat (\c -> c /= '\"' && c /= '\'')
+--     _ <- char '\''
+--     return $ PChar c
 
-parseChar c = Parser $ \case
-    [] -> Nothing
-    c':rest -> if c == c' then Just (c', rest) else Nothing
+-- parseDate =
 
--- parseString = traverse parseChar
