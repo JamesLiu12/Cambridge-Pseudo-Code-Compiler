@@ -3,50 +3,51 @@ module Parser where
 import Text.Parser
 import Control.Applicative
 import Control.Monad
+import Data.Char
 
 data PExpression
     = PTrue
     | PFalse
     | PInteger Int
     | PFloat Double
-    | PChar Char
+    | PLiteralChar Char
     | PLiteralString String
 
+parseTrue :: Parser error PExpression
 parseTrue = PTrue <$ str "TRUE"
 
+parseFalse :: Parser error PExpression
 parseFalse = PFalse <$ str "FALSE"
 
+parseBoolean :: Parser error PExpression
 parseBoolean = parseTrue <|> parseFalse
 
-parseDigit = charThat (\c -> '0' <= c && c <= '9')
+parseDigit :: Parser error Char
+parseDigit = charThat isDigit
 
+parseUnsignedInteger :: Parser error PExpression
 parseUnsignedInteger = PInteger . read <$> some parseDigit
 
--- parseUnsignedFloat = PFloat $ do
---     integerPart <- some parseDigit
---     void $ char '.'
---     decimalPart <- some parseDigit
---     return (read (integerPart ++ "." ++ decimalPart) :: Double)
+parseUnsignedFloat :: Parser error PExpression
+parseUnsignedFloat = PFloat <$> do
+    integerPart <- some parseDigit
+    void $ char '.'
+    decimalPart <- some parseDigit
+    return (read (integerPart ++ "." ++ decimalPart) :: Double)
 
--- parseUnsignedFloat =
---     parseUnsignedInteger >>= (\integerPart ->
---     void (char '.') >> (
---     parseUnsignedInteger >>= \decimalPart ->
---     return (read (integerPart ++ "." ++ decimalPart) :: Double)))
+parseLiteralString :: Parser error PExpression
+parseLiteralString = PLiteralString <$> do
+    _ <- char '\"'
+    s <- many $ charThat (\c -> c /= '\"' && c /= '\'')
+    _ <- char '\"'
+    return s
 
-
--- "abc"
--- parseLiteralString = do 
---     _ <- char '\"'
---     s <- many $ charThat (\c -> c /= '\"' && c /= '\'')
---     _ <- char '\"'
---     return $ PLiteralString s
-
--- parseChar = do
---     _ <- char '\''
---     c <- charThat (\c -> c /= '\"' && c /= '\'')
---     _ <- char '\''
---     return $ PChar c
+parseLiteralChar :: Parser error PExpression
+parseLiteralChar = PLiteralChar <$> do
+    _ <- char '\''
+    c <- charThat (\c -> c /= '\"' && c /= '\'')
+    _ <- char '\''
+    return c
 
 -- parseDate =
 
