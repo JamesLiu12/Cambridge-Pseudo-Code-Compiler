@@ -37,16 +37,16 @@ parseUnsignedFloat = PFloat <$> do
 
 parseLiteralString :: Parser error PExpression
 parseLiteralString = PLiteralString <$> do
-    _ <- char '\"'
+    void $ char '\"'
     s <- many $ charThat (\c -> c /= '\"' && c /= '\'')
-    _ <- char '\"'
+    void $ char '\"'
     return s
 
 parseLiteralChar :: Parser error PExpression
 parseLiteralChar = PLiteralChar <$> do
-    _ <- char '\''
+    void $ char '\''
     c <- charThat (\c -> c /= '\"' && c /= '\'')
-    _ <- char '\''
+    void $ char '\''
     return c
 
 -- parseDate =
